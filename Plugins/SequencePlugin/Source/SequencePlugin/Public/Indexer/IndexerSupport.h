@@ -23,6 +23,7 @@ class UIndexerSupport : public UObject
 public:
 	static float GetAmount(int64 Amount,int32 Decimals);
 	static float GetAmount(int64 Amount,float Decimals);
+	static float GetAmount(FString Amount,float Decimals);
 	
 	/*
 	* Used to convert a jsonObject into a hash map of FStrings

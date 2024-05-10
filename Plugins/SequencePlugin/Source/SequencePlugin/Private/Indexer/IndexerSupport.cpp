@@ -24,6 +24,13 @@ float UIndexerSupport::GetAmount(int64 Amount, float Decimals)
 	return ret;
 }
 
+float UIndexerSupport::GetAmount(FString Amount, float Decimals)
+{
+    double ret = FCString::Atod(GetData(Amount));
+    ret /= FMath::Pow(10, Decimals);
+    return ret;
+}
+
 /*
 * This will convert a jsonObject into a TMap<FString,FString> thereby making a dynamic
 * object usable in the UI!

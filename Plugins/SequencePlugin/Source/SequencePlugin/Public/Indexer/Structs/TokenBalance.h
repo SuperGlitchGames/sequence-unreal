@@ -23,7 +23,7 @@ public:
     UPROPERTY()
         int64 tokenID = -1;
     UPROPERTY()
-        int64 balance = -1;
+        FString balance = "";
     UPROPERTY()
         FString blockHash = "";
     UPROPERTY()
@@ -49,7 +49,7 @@ public:
         ret.Get()->SetStringField("contractType", UEnum::GetValueAsString(contractType.GetValue()));
         ret.Get()->SetStringField("accountAddress", accountAddress);
         ret.Get()->SetNumberField("tokenID", tokenID);
-        ret.Get()->SetNumberField("balance", balance);
+        ret.Get()->SetStringField("balance", balance);
         ret.Get()->SetStringField("blockHash",blockHash);
         ret.Get()->SetNumberField("blockNumber", blockNumber);
         ret.Get()->SetNumberField("updateID", updateID);
