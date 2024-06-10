@@ -26,14 +26,14 @@ void UIOSBridge::InitiateGoogleSSO(const FString& Url, const FString& Scheme, vo
 #endif
 }
 
-void UIOSBridge::InitiateIosSSO(const FString& clientID, const FString& nonce, void(*IOSCallback)(char *idToken))
+void UIOSBridge::InitiateIosSSO(const FString& clientID, const FString& nonce, void(*IOSCallback)(int errorCode, char *idToken))
 {
 #if PLATFORM_IOS
 	NSString * cID = clientID.GetNSString();
 	NSString * n = nonce.GetNSString();
 	IOSOAuth *auth = [[IOSOAuth alloc] init];
-	[auth loadBrowserWithUrl:cID nonce:n callback:^(char *idToken){
-		IOSCallback(idToken);
+	[auth loadBrowserWithUrl:cID nonce:n callback:^(int errorCode, char *idToken){
+		IOSCallback(errorCode, idToken);
 	}];
 #endif
 }

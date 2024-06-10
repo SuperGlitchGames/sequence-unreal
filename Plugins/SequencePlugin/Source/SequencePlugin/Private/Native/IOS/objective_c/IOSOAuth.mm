@@ -6,9 +6,9 @@
 
 static NSString *url = @"";
 static NSString *userId = @"";
-static Callback completion = ^(char *idToken) {};
+static Callback completion = ^(int errorCode, char *idToken) {};
 
-typedef void(^Callback)(char *idToken);
+typedef void(^Callback)(int errorCode, char *idToken);
 
 @implementation IOSOAuth
 
@@ -74,7 +74,7 @@ typedef void(^Callback)(char *idToken);
     }
 }
 
-- (void)loadBrowserWithUrl:(NSString *)cID nonce:(NSString *)nonce callback:(void(^)(char *))callback {
+- (void)loadBrowserWithUrl:(NSString *)cID nonce:(NSString *)nonce callback:(void(^)(int, char *))callback {
     completion = [callback copy];
     [[IOSOAuth GetDelegate] loadBrowserURLInIOSThread:cID nonce:nonce];
 }
@@ -103,7 +103,7 @@ typedef void(^Callback)(char *idToken);
         
         NSString *token = [[NSString alloc] initWithData:appleIDCredential.identityToken encoding:NSUTF8StringEncoding];
         char *idToken = [[IOSOAuth GetDelegate] ConvertNSStringToChars:token];
-        completion(idToken);
+        completion(-1, idToken);
     }
     
     if ([authorization.credential isKindOfClass:[ASAuthorizationSingleSignOnCredential class]]) {
@@ -111,34 +111,13 @@ typedef void(^Callback)(char *idToken);
         
         NSString * token = [[NSString alloc] initWithData:credential.identityToken encoding:NSUTF8StringEncoding];
         char *idToken = [[IOSOAuth GetDelegate] ConvertNSStringToChars:token];
-        completion(idToken);
+        completion(-1, idToken);
     }
 }
 
 - (void)authorizationController:(ASAuthorizationController *)controller didCompleteWithError:(NSError *)error {
-    NSString *errorMsg = nil;
-    switch (error.code) {
-        case ASAuthorizationErrorCanceled:
-            errorMsg = @"ASAuthorizationErrorCanceled";
-            break;
-        case ASAuthorizationErrorFailed:
-            errorMsg = @"ASAuthorizationErrorFailed";
-            break;
-        case ASAuthorizationErrorInvalidResponse:
-            errorMsg = @"ASAuthorizationErrorInvalidResponse";
-            break;
-        case ASAuthorizationErrorNotHandled:
-            errorMsg = @"ASAuthorizationErrorNotHandled";
-            break;
-        case ASAuthorizationErrorUnknown:
-            errorMsg = @"ASAuthorizationErrorUnknown";
-            break;
-    }
-    
-    if (errorMsg) {
-        NSLog(@"errorMsg: %@", errorMsg);
-        return;
-    }
+    NSLog(@"auth error: %@", error.localizedDescription);
+    completion(error.code, nullptr);
 }
 
 - (void)dealloc {

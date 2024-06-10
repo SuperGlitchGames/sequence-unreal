@@ -14,10 +14,12 @@ import androidx.credentials.GetCredentialRequest;
 import androidx.credentials.GetCredentialResponse;
 import androidx.credentials.exceptions.GetCredentialException;
 import androidx.credentials.exceptions.NoCredentialException;
+import androidx.credentials.exceptions.GetCredentialCancellationException;
 import androidx.credentials.exceptions.GetCredentialCustomException;
 
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 
 import java.util.concurrent.Executors;
 
@@ -25,7 +27,10 @@ import com.epicgames.unreal.GameActivity;
 
 public class SequenceGoogleSignInHelper {
     private static final String TAG = "SequenceGoogleSignIn";
-
+    
+	public static final int GOOGLE_RESPONSE_CANCELED = 1;
+	public static final int GOOGLE_RESPONSE_ERROR = 2;
+    
     public static void signIn(
         Context context,
         String clientId,
@@ -61,11 +66,16 @@ public class SequenceGoogleSignInHelper {
 
                     @Override
                     public void onError(@NonNull GetCredentialException e) {
-                        // Log.e(TAG, "Error getting credential", e);
-                        // if (e instanceof GetCredentialCustomException) {
-                        //     GetCredentialCustomException customException = (GetCredentialCustomException) e;
-                        //     Log.e(TAG, "Custom Exception Type: " + customException.getType());
-                        // }                        
+                        Log.e(TAG, "Error getting credential", e);
+                        
+                        if (e instanceof GetCredentialCancellationException)
+                        {
+                            GameActivity.sequenceGetInstance().nativeSequenceHandleError(GOOGLE_RESPONSE_CANCELED);
+                        }
+                        else 
+                        {
+                            GameActivity.sequenceGetInstance().nativeSequenceHandleError(GOOGLE_RESPONSE_ERROR);
+                        }
                     }
                 }
         );
@@ -80,10 +90,12 @@ public class SequenceGoogleSignInHelper {
                 GoogleIdTokenCredential idTokenCredential = GoogleIdTokenCredential.createFrom(credential.getData());
                 GameActivity.sequenceGetInstance().nativeSequenceHandleGoogleIdToken(idTokenCredential.getIdToken());
             } catch (Exception e) {
-                // Log.e(TAG, "Failed to parse Google ID token response", e);
+                Log.e(TAG, "Failed to parse Google ID token response", e);
+                GameActivity.sequenceGetInstance().nativeSequenceHandleError(GOOGLE_RESPONSE_ERROR);
             }
         } else {
-            // Log.e(TAG, "Unexpected credential type");
+            GameActivity.sequenceGetInstance().nativeSequenceHandleError(GOOGLE_RESPONSE_ERROR);
+            Log.e(TAG, "Unexpected credential type");
         }
     } 
 

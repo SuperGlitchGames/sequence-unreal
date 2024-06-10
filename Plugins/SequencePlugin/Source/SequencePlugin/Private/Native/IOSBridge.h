@@ -12,5 +12,5 @@ class SEQUENCEPLUGIN_API UIOSBridge : public UObject
 public:
 	UIOSBridge();
 	static void InitiateGoogleSSO(const FString& Url, const FString& Scheme, void(*IOSCallback)(char *idToken));
-	static void InitiateIosSSO(const FString& clientID, const FString& nonce, void(*IOSCallback)(char *idToken));
+	static void InitiateIosSSO(const FString& clientID, const FString& nonce, void(*IOSCallback)(int errorCode, char *idToken));
 };

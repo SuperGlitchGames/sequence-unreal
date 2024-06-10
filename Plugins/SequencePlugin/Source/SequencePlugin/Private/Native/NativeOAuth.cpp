@@ -8,52 +8,61 @@
 
 namespace NativeOAuth
 {
-	void RequestAuthWebView(const FString& requestUrl, const FString& redirectUrl, UAuthenticator * AuthCallback)
-	{
-		Callback = AuthCallback;
+void RequestAuthWebView(const FString& requestUrl, const FString& redirectUrl, UAuthenticator* AuthCallback)
+{
+    Callback = AuthCallback;
 #if PLATFORM_ANDROID
 		AndroidThunkCpp_RequestAuthInWebView(requestUrl,redirectUrl);
 #endif
-	}
-	
-	void SignInWithGoogle(const FString& clientId, const FString& nonce, UAuthenticator * AuthCallback)
-	{
-		Callback = AuthCallback;
+}
+
+void SignInWithGoogle(const FString& clientId, const FString& nonce, UAuthenticator* AuthCallback)
+{
+    Callback = AuthCallback;
 #if PLATFORM_ANDROID
 		AndroidThunkCpp_SignInWithGoogle(clientId, nonce);
 #endif // PLATFORM_ANDROID
-	}
+}
 
-	void SignInWithGoogle_IOS(const FString& Url, const FString& Scheme, UAuthenticator * AuthCallback)
-	{
-		Callback = AuthCallback;
-		UIOSBridge::InitiateGoogleSSO(Url,Scheme,ProcessIosTokenizedUrlCallback);
-	}
+void SignInWithGoogle_IOS(const FString& Url, const FString& Scheme, UAuthenticator* AuthCallback)
+{
+    Callback = AuthCallback;
+    UIOSBridge::InitiateGoogleSSO(Url, Scheme, ProcessIosTokenizedUrlCallback);
+}
 
-	void ProcessIosTokenizedUrlCallback(char * tokenizedUrl)
-	{
-		const FString token = FString(UTF8_TO_TCHAR(tokenizedUrl));
-		UAuthenticator * CallbackLcl = Callback;
-		AsyncTask(ENamedThreads::GameThread, [CallbackLcl,token]() {
-			CallbackLcl->UpdateMobileLogin(token);
-		});
-	}
-	
-	void ProcessIosCallback(char * idToken)
-	{
-		const FString token = FString(UTF8_TO_TCHAR(idToken));
-		UAuthenticator * CallbackLcl = Callback;
-		AsyncTask(ENamedThreads::GameThread, [CallbackLcl,token]() {
-			CallbackLcl->SocialLogin(token);
-		});
-	}
-	
-	void SignInWithApple(const FString& clientID, const FString& nonce, UAuthenticator * AuthCallback)
-	{
-		Callback = AuthCallback;		
-		UIOSBridge::InitiateIosSSO(clientID, nonce, ProcessIosCallback);
-	}
-	
+void ProcessIosTokenizedUrlCallback(char* tokenizedUrl)
+{
+    const FString token = FString(UTF8_TO_TCHAR(tokenizedUrl));
+    UAuthenticator* CallbackLcl = Callback;
+    AsyncTask(ENamedThreads::GameThread,
+              [CallbackLcl,token]() {
+                  CallbackLcl->UpdateMobileLogin(token);
+              });
+}
+
+void ProcessIosCallback(int errorCode, char* idToken)
+{
+    const FString token = FString(UTF8_TO_TCHAR(idToken));
+    UAuthenticator* CallbackLcl = Callback;
+    AsyncTask(ENamedThreads::GameThread,
+              [CallbackLcl,errorCode, token]() {
+                  if (errorCode == -1)
+                  {
+                      CallbackLcl->SocialLogin(token);
+                  }
+                  else
+                  {
+                      CallbackLcl->AuthFailure.Broadcast();
+                  }
+              });
+}
+
+void SignInWithApple(const FString& clientID, const FString& nonce, UAuthenticator* AuthCallback)
+{
+    Callback = AuthCallback;
+    UIOSBridge::InitiateIosSSO(clientID, nonce, ProcessIosCallback);
+}
+
 #if PLATFORM_ANDROID
         void AndroidLog(const FString& message) {
 //use dev flag here
@@ -143,6 +152,12 @@ JNI_METHOD void Java_com_epicgames_unreal_GameActivity_nativeSequenceHandleGoogl
     	Callback->SocialLogin(idToken);
     	jenv->ReleaseStringUTFChars(jIdToken, idTokenChars);
     }
+
+JNI_METHOD void Java_com_epicgames_unreal_GameActivity_nativeSequenceHandleError(JNIEnv* jenv, jobject thiz, jint ResponseCode)
+    {
+    	Callback->AuthFailure.Broadcast();
+    }
+
 
 
 JNI_METHOD void Java_com_epicgames_unreal_GameActivity_nativeSequenceHandleRedirectUrl(JNIEnv* jenv, jobject thiz, jstring jRedirectUrl)

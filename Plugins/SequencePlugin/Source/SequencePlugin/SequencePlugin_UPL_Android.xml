@@ -44,8 +44,8 @@ import com.Plugins.SequencePlugin.SequenceWebViewAuth;
             
              
             
-    public native void nativeSequenceHandleGoogleIdToken(String idToken);
-
+    public native void nativeSequenceHandleGoogleIdToken(String idToken); 
+    public native void nativeSequenceHandleError(int error);
     public native void nativeSequenceHandleRedirectUrl(String redirectUrl);
             
     public static String AndroidThunkJava_AndroidEncrypt(String stringIn) {
